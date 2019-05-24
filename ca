@@ -96,7 +96,6 @@ elif [ $# -eq 1 ]; then
 
 	case $1 in 
 		help) HELPMENU ;;
-		req) REQUEST ;;
 		install)  
 			echo
 			echo -e "$error Specify a directory $reset"
@@ -110,12 +109,30 @@ elif [ $# -eq 2 ]; then
 	case $1 in 
 		req|r|request) 
 			workdir=`cat cadir`
-			cd $workdir
-			san=$2
-			echo -e "$good Making request $reset"
-			SAN=DNS:$2 openssl req -new -config etc/server.conf -out certs/$2.csr -keyout certs/$2.key
-			echo -e "$good Signing ... $reset"
-			openssl ca -config etc/signing-ca.conf -in certs/$2.csr -out certs/$2.crt -extensions server_ext -batch
+			case $workdir in 
+				"") 
+					echo
+					echo -e "$error No CA is installed !$reset"
+					echo
+				;;
+				*) 
+					if [ -d $workdir ]; then 
+						cd $workdir
+						san=$2
+						echo -e "$good Making request $reset"
+						SAN=DNS:$2 openssl req -new -config etc/server.conf -out certs/$2.csr -keyout certs/$2.key
+						echo -e "$good Signing ... $reset"
+						openssl ca -config etc/signing-ca.conf -in certs/$2.csr -out certs/$2.crt -extensions server_ext -batch
+					else
+						echo 
+						echo -e "$error $blue$workdir$reset$bold is not found or removed ! $reset"
+						echo -e "$bold  Clear cadir file , or edit it with the install location "
+						echo -e "$bold  or install a new CA. $reset"
+						echo
+					fi
+				;;
+			esac
+			
 		;;
 		install) 
 			realpath=$(realpath $2)
